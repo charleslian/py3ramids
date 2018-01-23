@@ -1,0 +1,42 @@
+SolutionMethod      diagon
+MaxSCFIterations 50 
+TD.MiddlePointEvolve  F 
+TD.LengthTimeStep     0.05 fs
+TD.WriteProjectionStep 500
+TD.FastEvolve T 
+TD.WavefunctionOntheFly
+DM.AllowReuse T
+DM.AllowExtrapolation F
+SCF.Mixer.Method linear
+SCF.Converge.H F 
+ElectronicTemperature 5 K
+TD.EnvelopeFromFile 
+
+WriteMDHistory .true.
+LongOutput
+SCFMustConverge 
+
+TimeReversalSymmetryForKpoints False
+
+compute-forces T 
+MD.TypeOfRun        verlet
+MD.FinalTimeStep      400
+MD.LengthTimeStep     0.0 fs
+MD.InitialTemperature 0 K
+
+PAO.BasisSize DZP
+MeshCutoff 200 Ry
+
+SlabDipoleCorrection F
+%block TD.GaugeField
+0.0010 0.00 0.00 Ry/Bohr/e
+%endblock TD.GaugeField
+
+
+%block kgrid_Monkhorst_Pack
+6 0 0
+0 6 0
+0 0 6 
+%endblock kgrid_Monkhorst_Pack
+
+%include structure.fdf
