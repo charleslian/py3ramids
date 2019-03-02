@@ -32,7 +32,7 @@ def getColors(colorList,cmap='jet'):
 #-------------------------------------------------------------------
 def add_label(index, ax, labelx = 0.02, labely = 0.95):
   label = ALPHABET[index]
-  ax.text(labelx, labely, label, transform=ax.transAxes, 
+  ax.text(labelx, labely, r'$\mathbf{%s}$'%label, transform=ax.transAxes, 
           fontsize='xx-large',color='k')  
 #------------------------------------------------------------------- 
 def setProperty(ax, **kargs):
@@ -142,30 +142,41 @@ def setProperty(ax, **kargs):
       if kargs['minorgrid'] or True:
         ax.grid(linestyle='--', linewidth=0.3, which='minor')
     #ax.grid(linestyle='--', linewidth=1, which='both')
-  if('xlabel' in kargs) and len(ax.get_xticklabels()) > 0 :
-    if ax.get_xticklabels()[0].get_visible():  
-      ax.set_xlabel(kargs['xlabel'],fontsize=labelsize) 
-  if('ylabel' in kargs) and len(ax.get_yticklabels()) > 0:
-    if ax.get_yticklabels()[0].get_visible():    
-      ax.set_ylabel(kargs['ylabel'],fontsize=labelsize) 
+  if('xlabel' in kargs): 
+      if len(ax.get_xticklabels()) > 0:
+          if ax.get_xticklabels()[0].get_visible():
+              ax.set_xlabel(kargs['xlabel'],fontsize=labelsize)
+      else:
+           ax.set_xlabel(kargs['xlabel'],fontsize=labelsize)
+      
+  if('ylabel' in kargs):
+      if len(ax.get_yticklabels()) > 0:
+          if ax.get_yticklabels()[0].get_visible():
+              ax.set_ylabel(kargs['ylabel'],fontsize=labelsize)
+      else: 
+          ax.set_ylabel(kargs['ylabel'],fontsize=labelsize)
   #ax.get_yaxis().get_major_formatter().set_useOffset(False)
 
   ax.tick_params(labelsize=ticksize)
-  #if 'minortick' in kargs and kargs['minortick']:
-  ax.minorticks_on()
+  if 'minortick' in kargs and kargs['minortick']:
+      ax.minorticks_on()
   #print ax.get_xlim(),ax.get_ylim()
   if 'ncol' in kargs:
     ncol = kargs['ncol'] 
   else:
     ncol = 1
-  ax.legend(fontsize='large',loc=loc,frameon=False, ncol=ncol, fancybox=True, framealpha=0.5)
+  if 'legendFontSize' in kargs:
+    fontsize = kargs['legendFontSize']
+  else:
+    fontsize = 'large'
+  ax.legend(fontsize=fontsize ,loc=loc,frameon=False, ncol=ncol, fancybox=True, framealpha=0.5)
 
 def getPropertyFromPosition(index=None, xlabel='',ylabel='',title='', 
                             grid = False, minorgrid=False, minortick=True, legendLoc = None,
                             xticks=None, yticks=None, 
                             xticklabels=None, yticklabels=None,
                             xlimits=None, ylimits=None,
-                            hline = None, vline = None,
+                            hline = None, vline = None, legendFontSize='large',
                             ticksize = None):
   """
   a utility function to set the property of the figure axe
@@ -179,7 +190,7 @@ def getPropertyFromPosition(index=None, xlabel='',ylabel='',title='',
   else:
     args['title'] = title
     
-    
+  args['legendFontSize'] = legendFontSize
   if legendLoc is not None:
     args['loc']= legendLoc
   else:

@@ -17,7 +17,7 @@ def readData():
         else:
             nband += 1
     data = np.array(data)
-    nkpt = data.shape[0]/nband 
+    nkpt = data.shape[0]//nband 
     band = np.zeros([nkpt,nband+1])
     band[:,0] = data[:nkpt,0]
     band[:,1:] = data[:,1].reshape([nband,nkpt]).T
@@ -61,7 +61,7 @@ ax = axs[1]
 xcon = np.linspace(1E15,1E15,dos.shape[0])
 ax.fill_between(dos[:,1], dos[:,0], xcon)
 
-ax.plot(dos[:,1], dos[:,0], '-k')
+ax.plot(dos[:,1], dos[:,0], '-k', lw=0.2)
 #ax.plot(xcon, dos[:,0])
 
 
@@ -81,9 +81,11 @@ ax.plot(data[:,0],data[:,1:],'-b', mfc='w',ms=3.0)
 args = ma.getPropertyFromPosition(0, 
                                   title = 'Band', 
                                   ylabel = 'Energy (eV)', 
+                                  #xlimits=[0.9,1.2], 
                                   xlimits=[data[:,0].min(),data[:,0].max()], 
-                                  ylimits=[-4,2], 
-                                  xticklabels=[],
+                                  #ylimits=[-0.7,0.4], 
+                                  ylimits=[-15, 5], 
+                                  #xticklabels=[],
                                   hline=[0.0],
                                   vline=skpt[:-1]
                                   )

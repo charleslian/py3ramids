@@ -1,4 +1,4 @@
-#/usr/bin/python
+#/usr/bin/python3
 from ase.calculators.siesta.import_functions import xv_to_atoms
 from ase.visualize import view
 import pyramids.io.output as tdio
@@ -10,7 +10,7 @@ import numpy as np
 #atoms.pbc = [True, True, True]
 #ase.build.niggli_reduce(atoms)
 #tdio.writeSiesta('structure.fdf',atoms)
-atoms*=[2,2,1]
+#atoms*=[2,2,1]
 tdio.writeQE('structure.in',atoms)
 
 write('struture_super.vasp',atoms)

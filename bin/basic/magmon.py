@@ -9,15 +9,11 @@ Created on Tue Dec  5 21:04:25 2017
 
 
 def plot(ax, var):
-  directions = ['x','y','z'] 
-  linestyle = '-','--','-.'
-  for idir in range(3):
-    steps = min(var.time.shape[0],var.eField.shape[0])
-    ax.plot(var.time[:steps], var.eField[:steps,idir], 
-            ls=linestyle[idir], label=directions[idir])
-  #ax.plot(var.time, var.energy[1], '--', label='KS')
+  magmon = var.getMagMon()
+  for i in range(3):
+    ax.plot(var.time, magmon[:,i], '-',label='xyz'[i])
   import py3ramids.plot.setting as ma
-  ma.setProperty(ax, ylabel=r'E Field (V/$\mathrm{\AA}$)', xlabel='Time (fs)')
+  ma.setProperty(ax, ylabel='Mag Mon (Bohr/cell)', xlabel='Time (fs)')
 
 
 if __name__ == '__main__':

@@ -98,6 +98,81 @@ def voronoi_plot_2d(vor, ax=None):
     #_adjust_bounds(ax, vor.points)
 
     return ax.figure
+
+#import py3ramids.plot.setting as ma
+#def plotDOS(ax, step, ylimits=[0,None], bins=100, **kargs):
+#  xlabel = 'Energy (eV)'
+#  ylabel = 'DOS'
+#  
+#  eDosInterp, yDosInterp, yParInterp = dp.calculateDOS(step,bins=bins)
+#  ax.fill_between(eDosInterp, yParInterp, color='b')
+#  ax.fill_between(eDosInterp,-yParInterp, color='r')
+#  ax.fill_between(eDosInterp, yDosInterp, lw=3, color='g',alpha=0.2)
+#  
+#  kargs = ma.getPropertyFromPosition(xlabel=xlabel, ylabel=ylabel, 
+#                                     ylimits=ylimits, yticklabels=[], 
+#                                     **kargs)
+#  ma.setProperty(ax,**kargs)
+#  
+#def calculateDOS(step, xlimits=None, intepNum=1000, bins=200, ref=True, interp= True):
+#  #kcoor, kweight = readKpoints()
+#  x = np.arange(kcoor.shape[0])
+#  
+#  xlabel = 'Energy (eV)'
+#  ylabel = 'Population'
+#  
+#  sortedDF = generatePopulationFile(step,ref)
+#  
+#  xt = sortedDF[xlabel]
+#  yt = sortedDF[ylabel]
+#  
+#  #print 'yt is',yt  
+#  if xlimits != None: 
+#    x = xt[xt>xlimits[0]][xt<xlimits[1]]
+#    y = yt[xt>xlimits[0]][xt<xlimits[1]]
+#  else:
+#    x = xt
+#    y = yt
+#    
+#  dos, bin_edges = np.histogram(x, bins=bins, range=xlimits)
+#  par, bin_edges = np.histogram(x, bins=bins, range=xlimits, weights=y/2)
+#  #parDn, bin_edges = np.histogram(x,bins=bins,range=xlimits,weights=-y/2)
+#  if not interp:
+#    return bin_edges[:-1],dos,par
+#  
+#  def interp(xin,yin,xout):
+#    from scipy.interpolate import interp1d
+#    spline = interp1d(xin, yin, kind='cubic')
+#    return spline(xout) 
+#  
+#  eDosInterp = np.linspace(bin_edges[0], bin_edges[-2], intepNum)
+#  yDosInterp = interp(bin_edges[:-1], dos, eDosInterp)
+#  yParInterp = interp(bin_edges[:-1], par, eDosInterp)
+#  
+#  return eDosInterp, yDosInterp, yParInterp
+#
+#
+#def plotDistribution(ax, step, bins=100, intepNum=2000, ylimits=[0,1], **kargs):
+#  xlabel = 'Energy (eV)'
+#  ylabel = 'FD'
+#  yticklabels=[]
+#  
+#  eDos, dos, par = dp.calculateDOS(step, ref=False, interp=False,bins=bins)
+#  distribution = (np.abs(par))/((dos)+1E-10)
+#  
+#  def interp(xin,yin,xout):
+#    from scipy.interpolate import interp1d
+#    spline = interp1d(xin, yin, kind='cubic')
+#    return spline(xout) 
+#  
+#  x = np.linspace(eDos[0], eDos[-1], intepNum)
+#  y = interp(eDos, distribution, x)
+#  
+#  #print (np.abs(yDosInterp)+0.001).min()
+#  ax.fill_between(x, y, color='b')
+#  #print yDosInterp.min()
+#  kargs = ma.getPropertyFromPosition(xlabel=xlabel, ylabel=ylabel, ylimits=ylimits, **kargs)
+#  ma.setProperty(ax,**kargs)
 #def plot2DBZ(ax, atoms):
 #  reciprocal_vectors = 2*np.pi*atoms.get_reciprocal_cell()
 #  points=np.array([(reciprocal_vectors[0,0:2]*i+
@@ -267,8 +342,9 @@ def voronoi_plot_2d(vor, ax=None):
 #  ax.annotate(s='',xy=(0.2,0.2),xytext=(0,0),xycoords='axes fraction',
 #                arrowprops=dict(width=2.0,color=colors[2])) 
 ##-------------------------------------------------------------------
-def generateStructPNG(atoms, output='struct', rotation=[0,0,0], 
-                      camera='perspective', repeat = [1,1,1], showcell=0,**args):
+def generateStructPNG(atoms, output='struct', rotation=[0,0,0], camera_dist=12000, ratioR=1.0, canvas_height=800, 
+                      colors=None,
+                      camera='perspective', repeat = [1,1,1], showcell=0, textures='ase3', run_povray=False, **args):
   #from ase.calculators.siesta.import_functions import xv_to_atoms
   from ase.io import write
   
@@ -277,25 +353,25 @@ def generateStructPNG(atoms, output='struct', rotation=[0,0,0],
   atoms.center()
   atoms = atoms*repeat
   for position in atoms.positions: 
-    position -= repeat[0]/4.0*cell[0,:]
-    position -= repeat[1]/4.0*cell[1,:]
-    position -= repeat[2]/4.0*cell[2,:]
+    position -= repeat[0]//2.0*cell[0,:]
+    position -= repeat[1]//2.0*cell[1,:]
+    position -= repeat[2]/2.0*cell[2,:]
   atoms.cell = cell
   
   kwargs = {
       'rotation'      : rot, # text string with rotation (default='' )
-      'radii'         : 1.0, # float, or a list with one float per atom
-      'colors'        : None,# List: one (r, g, b) tuple per atom
+      'radii'         : ratioR, # float, or a list with one float per atom
+      'colors'        : colors,# List: one (r, g, b) tuple per atom
       'show_unit_cell': showcell,   # 0, 1, or 2 to not show, show, and show all of cell
       }
   kwargs.update({
-    'run_povray'   : True, # Run povray or just write .pov + .ini files
-    'display'      : False,# Display while rendering
+    'run_povray'   : run_povray, # Run povray or just write .pov + .ini files
+    'display'      : True,# Display while rendering
     'pause'        : True, # Pause when done rendering (only if display)
     'transparent'  : True,# Transparent background
     'canvas_width' : None, # Width of canvas in pixels
-    'canvas_height': 800, # Height of canvas in pixels 
-    'camera_dist'  : 12000.,  # Distance from camera to front atom
+    'canvas_height': canvas_height, # Height of canvas in pixels 
+    'camera_dist'  : camera_dist,  # Distance from camera to front atom
     'image_plane'  : 0, # Distance from front atom to image plane
     'camera_type'  : camera, # perspective, ultra_wide_angle, orthographic
     'point_lights' : [],             # [[loc1, color1], [loc2, color2],...]
@@ -303,11 +379,10 @@ def generateStructPNG(atoms, output='struct', rotation=[0,0,0],
                       'White',       # color
                       .7, .7, 3, 3], # width, height, Nlamps_x, Nlamps_y
     'background'   : 'White',        # color
-    'textures'     : ['ase2']*atoms.positions.shape[0], # Length of atoms list of texture names
+    'textures'     : [textures]*atoms.positions.shape[0], # Length of atoms list of texture names
     'celllinewidth': 0.1,  # Radius of the cylinders representing the cell
     })
     
-
   write(output+'.pov',atoms, **kwargs)
 
   
@@ -351,7 +426,7 @@ def insertImag(ax,filename='struct.png'):
 #  return axin, im  
 #  
 #-------------------------------------------------------------------
-def scanFolder(action,folders=None):
+def scanFolder(action,folders=None,**kargs):
   if folders is None:
     folders = [folder for folder in os.listdir('.')
                 if os.path.isdir(folder)]                
@@ -362,7 +437,7 @@ def scanFolder(action,folders=None):
   for index,folder in enumerate(folders):
     print("running in ",folder, curdir)
     os.chdir(folder)
-    collection.append(action(index,folder))
+    collection.append(action(index,folder,**kargs))
     os.chdir(curdir)
   return collection
 

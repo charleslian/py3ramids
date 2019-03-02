@@ -6,10 +6,15 @@ Created on Tue Dec  5 21:04:25 2017
 @author: clian
 """
 
+import matplotlib.pyplot as plt
 
-
-if __name__ == '__main__':
+def action():
   import os
+  import pickle
+  if os.path.exists('var.pkl'):
+      with open('var.pkl','rb') as f:
+          return pickle.load(f)
+  
   if os.path.exists('input.fdf'):
     soft = 'tdap'
   elif os.path.exists('input.in'):
@@ -21,11 +26,15 @@ if __name__ == '__main__':
   else:
     from py3ramids.io.ESPRESSO_interface import TdpwVarible
     var = TdpwVarible()
+  
+  with open('var.pkl', 'wb') as f: 
+      pickle.dump(var, f)
     
+  return var
   
-  
+if __name__ == '__main__':
   #print(basic)
-  import matplotlib.pyplot as plt
+  var = action()
   fig, axs = plt.subplots(5,1,figsize=(6,12),sharex=True)
   
   import py3ramids.bin.basic.current
@@ -45,6 +54,3 @@ if __name__ == '__main__':
   plt.tight_layout()
   SaveName = __file__.split('/')[-1].split('.')[0]
   plt.savefig(SaveName+'.pdf')
-  
-  
-

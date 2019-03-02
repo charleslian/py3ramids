@@ -12,14 +12,21 @@ __credits__ = "Chao Lian initial and maintain the codes"
 
 import numpy as np
 import os
-from pyramids.io.fdf import tdapOptions
+from py3ramids.io.fdf import tdapOptions
 
 def getElectronStepLength(filename='input.in'):
   for line in open(filename).readlines():
       if 'edt' in line.split():
           return float(line.split()[-1].replace(',',''))*0.04838
 
-
+def getTrajactory():
+  from ase.io.trajectory import Trajectory
+  filename='Trajectory'
+  return Trajectory(filename)
+  
+  
+  
+  
 def getEELS(filename='q_list',prefix='EELS_'):
   Q = np.loadtxt(filename) 
   Z = []

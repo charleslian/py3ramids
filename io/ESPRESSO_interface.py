@@ -18,7 +18,12 @@ from py3ramids.io.variables import Variables
 from ase.units import Rydberg, Bohr
 
 class TdpwVarible(Variables):
-  def __init__(self,inputFile='input.in', outputFile = 'result'):
+  def __init__(self,inputFile='input.in', outputFile = 'result', tmpFile = 'var.pkl'):
+#    import os
+#    if os.path.exists(tmpFile):  
+#        import pickle
+#        with open(tmpFile,'rb') as f: return pickle.load(f)
+        
     self.inputFile  = inputFile
     self.outputFile = outputFile
     self.eigStartStep = 2
@@ -48,11 +53,18 @@ class TdpwVarible(Variables):
     
     self.temperature = self.getTemperature()
     self.kpts = self.getKpts()
-    self.traj = self.getTrajactory()
+    #self.traj = self.getTrajactory()
+    self.getTrajactory() # just generate the file, don't save it in the obj
     self.current = self.getCurrent()
     self.carrier = self.getCarrier()
+    self.tdnorm = self.readTDData(mode='norm')
+    self.tdvalue = self.readTDData(mode='value')
+    #self.carrier = self.getCarrier()
     self.cartime = self.time
-  
+#  def __new__(cls,filename='var.pkl'):
+
+      
+      
   def _readValue(self, tag, typeFunc):
     value = self._findLineContain(tag, self.inputFile)[1].split()[-1]
     if value[-1] == ',' : value = value[:-1]
@@ -77,14 +89,33 @@ class TdpwVarible(Variables):
     ksEnergy = np.array([float(line.split()[-2])*Rydberg for line in lines])
     
     lines = self._findAllLineContain('Ekin + Etot', self.outputFile)
-    if lines[0].split()[-2] != 'NaN':
-      totalEnergy = np.array([float(line.split()[-2])*Rydberg for line in lines])
+    if len(lines) != 0:
+      if lines[0].split()[-2] != 'NaN':
+        totalEnergy = np.array([float(line.split()[-2])*Rydberg for line in lines])
+      else:
+        totalEnergy = ksEnergy
     else:
+      lines = self._findAllLineContain('Ekin', self.outputFile) 
+      totalEnergy = np.array([float(line.split()[-1])*Rydberg for line in lines])
       totalEnergy = ksEnergy
     
-    
     return ksEnergy, totalEnergy
-    
+
+#  def getPressure(self):
+#      total stress
+      
+  def getMagMon(self): 
+    data = self._findAllLineIndexContain("!    total energy", self.outputFile)
+    lines = open(self.outputFile).readlines()
+    return np.array([[float(num) for num in lines[index+4].split()[-5:-2]] for index, line in data])
+      
+  def getLattices(self): 
+    data = self._findAllLineIndexContain("new lattice vectors", self.outputFile)
+    if len(data) != 0:
+        lines = open(self.outputFile).readlines()
+        return np.array([[[float(num) for num in lines[index+i+1].split()] for i in range(3)]for index, line in data])
+    else:
+        return None
     
   def getTemperature(self): 
     """
@@ -97,14 +128,21 @@ class TdpwVarible(Variables):
     return temperature
   
   def _findLineContain(self, phrase, file):
+    #index = 0
+    #line = ''
     with open(file) as f:
       for index, line in enumerate(f):
         if phrase in line: return index, line
+      return None, None
 
   def _findAllLineContain(self, phrase, file):
     with open(file) as f:
       return [line for line in f if phrase in line]
-        
+    
+  def _findAllLineIndexContain(self, phrase, file):
+    with open(file) as f:
+      return [(index, line) for index, line in enumerate(f) if phrase in line]   
+    
   def getNumAtom(self):
     keyword = 'number of atoms/cell'
     index, line = self._findLineContain(keyword,self.outputFile)
@@ -113,7 +151,7 @@ class TdpwVarible(Variables):
   def getNumKpt(self):
     keyword = 'number of k points='
     index, line = self._findLineContain(keyword,self.outputFile)
-    return int(line.split()[-1])
+    return int(line.split()[4])
   
   def getNumElect(self):
     keyword = 'number of electrons'
@@ -126,15 +164,22 @@ class TdpwVarible(Variables):
     return int(line.split()[-1])
   
   def getKpts(self):
-    keyword = 'number of k points='
-    index, line = self._findLineContain(keyword,self.outputFile)
-    start = index+1
-    with open(self.outputFile) as f:
-      context = [temp.split() for i, temp in enumerate(f) if start+self.numKpt>=i>start]
-        
-        
-   #print(context)
-    kpts = np.array([[float(i) for i in (line[4], line[5], line[6][:-2], line[9])] for line in context])
+    wanWord = 'Number of k-points >= 100' 
+    
+    index, line = self._findLineContain(wanWord,self.outputFile)
+    if index is not None:
+        kpts = np.zeros([self.numKpt,4])
+        kpts[:,3] = 1/self.numKpt
+    else:
+        keyword = 'number of k points='
+        index, line = self._findLineContain(keyword,self.outputFile)
+        start = index+1
+        with open(self.outputFile) as f:
+          context = [temp.split() for i, temp in enumerate(f) if start+self.numKpt>=i>start]
+            
+            
+       #print(context)
+        kpts = np.array([[float(i) for i in (line[4], line[5], line[6][:-2], line[9])] for line in context])
       
     return kpts
 
@@ -149,6 +194,7 @@ class TdpwVarible(Variables):
     lines = fileobj.readlines()
     #print lines
     images = []
+    lattice = self.getLattices()
     
     for number, line in enumerate(lines):
       if 'number of atoms/cell' in line:
@@ -175,6 +221,8 @@ class TdpwVarible(Variables):
             cell[number, 1] = values[1]
             cell[number, 2] = values[2]
         cell *= lattice_parameter
+        
+
       if "site n.     atom                  positions (alat units)" in line:
         initPositionLines = lines[number+1:number+1+numAtom]
         elements = np.array([l.split()[1] for l in initPositionLines])
@@ -185,6 +233,16 @@ class TdpwVarible(Variables):
              
                      
       cellkey = 'CELL_PARAMETERS (angstrom)'
+      if cellkey in line:
+        ca_line_no = number
+        cell = np.array([[float(num) for num in line.split()] for line in lines[ca_line_no + 1: ca_line_no + 4]])
+#        for number, line in enumerate(lines[ca_line_no + 1: ca_line_no + 4]):
+#            line = line.split('=')[1].strip()[1:-1]
+#            values = [float(value) for value in line.split()]
+#            cell[number, 0] = values[0]
+#            cell[number, 1] = values[1]
+#            cell[number, 2] = values[2]
+      
       posikey = 'ATOMIC_POSITIONS' 
       if posikey in line:
         positionLines = lines[number+1:number+1+numAtom]
@@ -208,6 +266,17 @@ class TdpwVarible(Variables):
         calc = SinglePointCalculator(atom, forces=forces)
         atom.set_calculator(calc)
         
+      if "total   stress" in line:
+        #print number
+        atom = images[-1]
+        selectLines = lines[number+1:number+4]
+        selectPrperties = np.array([[float(i) for i in l.split()[-3:]] 
+                          for l in selectLines])
+        #forces *= units.Ry / units.Bohr
+        calc = atom.get_calculator() 
+        calc.results['stress'] = selectPrperties
+        #atom.set_calculator(calc)
+        
     filename = 'Trajectory'
     from ase.io import write  
     write(filename,images,'traj')
@@ -219,17 +288,27 @@ class TdpwVarible(Variables):
     
   
   def getCurrent(self):
-    keyword = 'current is'
+    keyword = 'current_KS is' 
     lines = self._findAllLineContain(keyword, self.outputFile) + ['current is 0.0 0.0 0.0']
     current = np.array([[float(num) for num in line.split()[2:6]] for line in lines])
+    if current.shape[0] == 1:
+        keyword = 'current is'
+        lines = self._findAllLineContain(keyword, self.outputFile) + ['current is 0.0 0.0 0.0']
+        current = np.array([[float(num) for num in line.split()[2:6]] for line in lines])
     #print(current)
-    current[-1,:] = current[-2,:]  
+    current[-1,:] = current[-2,:]
     return current - current[0,:] 
   
   def getCarrier(self):
     carrier = self.readTDData(mode='norm')
     carrier -= carrier[0,:,:]
-    nocc = int(self.numElect)//2
+    keyword = 'spin-orbit'
+    index, line = self._findLineContain(keyword,self.outputFile)
+    #print(index)
+    if index is not None:
+        nocc = int(self.numElect)
+    else:
+        nocc = int(self.numElect)//2
     #print(self.numElect)
     hotHole = carrier[:,:,:nocc].sum(axis=(1,2))
     hotElectron = carrier[:,:,nocc:].sum(axis=(1,2))
@@ -244,21 +323,41 @@ class TdpwVarible(Variables):
     elif mode == 'value':
       filename = 'pwscf.value.dat'
       weighted = False
+    else:
+      return 0
       
-    f = open(filename)
-    text = f.readlines()
-    nbnd, nkstot = [int(i) for i in text[0].split()]
-    kweight = [float(i) for i in text[1].split()]
+    #f = open(filename)
+    #data = np.loadtxt(filename, comments='-')
+    #data = np.hstack(data)
+    #print(data.shape)
+    #text = [line for line in f.readlines() if line[0] !='-']
+    #print(len(text))
+    #nbnd, nkstot = [int(i) for i in text[0].split()]
+    #kweight = [float(i) for i in text[1].split()]
+    #nstep = (len(text) - 2)//(nkstot+1)
+    #del text[1]
+    #del text[::(nkstot+1)]
+    #print([len(line.split()) for line in text[2:]])
     
-    nstep = (len(text) - 2)//(nkstot+1)
-    del text[1]
-    del text[::(nkstot+1)]
-    data = np.array([[float(i) for i in line.split()] for line in text])
-    data = data[:nstep*nkstot].reshape([nstep, nkstot, nbnd])
+    data = np.hstack([[float(num) for num in line.split()] for line in open(filename) if line[0] !='-'])
     
-    if weighted:
+    #data = np.hstack([([float(i) for i in line.split()]) for line in text[1:]])
+    
+    nbnd, nkstot = int(data[0]), int(data[1])
+    kweight = data[2:2+nkstot]
+    data = data[2+nkstot:]
+    dim = np.prod(data.shape)
+    print(data.shape)
+    print(dim,nkstot,nbnd)
+    
+    #data = data[:nstep*nkstot].reshape([nstep, nkstot, nbnd])
+    
+    data = data.reshape([dim//nkstot//nbnd, nkstot, nbnd])
+    
+    if weighted: 
       for ib in range(data.shape[2]):
-        data[:,:,ib] *= kweight
+          data[:,:,ib] *= kweight
+        
       
     return data
 
