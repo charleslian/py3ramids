@@ -24,7 +24,7 @@ class options(argparse.ArgumentParser):
                           help='input file, default: "result"')  
         self.add_argument('-o', '--output', type=str, nargs='?', default='struct.part',
                           help='output file, default: "struct.part"')
-        self.add_argument('-pp', '--pseudopotential', type=str, nargs='?', default='paw',
+        self.add_argument('-pp', '--pseudopotential', type=str, nargs='?', default='PAW',
                           help='pseudopotential type manual, paw, nc, default: "paw"')
         self.args = self.parse_args()
     
