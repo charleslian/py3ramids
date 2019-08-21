@@ -388,7 +388,7 @@ def splitMDCAR():
     poscarFile=open(poscarFileName,'w')
     poscarFile.writelines(output)
     
-def writeQE(filename,atoms,cart=True):
+def writeQE(filename,atoms,cart=True,pp='PAW'):
   NumberOfAtoms=atoms.get_number_of_atoms()
   elements=set(zip(atoms.get_chemical_symbols(), 
                    atoms.get_atomic_numbers(), atoms.get_masses()))
@@ -417,10 +417,20 @@ def writeQE(filename,atoms,cart=True):
   
   
   lines= 'ATOMIC_SPECIES\n'
-  for i,element in enumerate(elements):
-    psedo = [ele for ele in listPAW if ele.split('.')[0]==element[0]][0]
-    lines+= "%5s %21.16f %s\n" % (element[0], element[2], psedo)
-  f.write(lines)
+  if pp == 'PAW':
+      for i,element in enumerate(elements):
+        psedo = [ele for ele in listPAW if ele.split('.')[0]==element[0]][0]
+        lines+= "%5s %21.16f %s\n" % (element[0], element[2], psedo)
+      f.write(lines)
+  elif pp == 'NC':
+      for i,element in enumerate(elements):
+        psedo = element[0]+'.upf'
+        lines+= "%5s %21.16f %s\n" % (element[0], element[2], psedo)
+      f.write(lines)
+  else:
+      # read directly from the input
+      lines+=pp
+      f.write(lines)
   
   if cart:
       f.write("ATOMIC_POSITIONS angstrom\n")

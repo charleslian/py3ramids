@@ -21,15 +21,28 @@ class options(argparse.ArgumentParser):
         self.add_argument('-cart', '--cartesian', type=bool, nargs='?', default=True,
                           help='output as cartesian')
         self.add_argument('-i', '--input', type=str, nargs='?', default='result',
-                          help='input file, default: "result"')
+                          help='input file, default: "result"')  
         self.add_argument('-o', '--output', type=str, nargs='?', default='struct.part',
                           help='output file, default: "struct.part"')
-        self.args = self.parse_args() 
+        self.add_argument('-pp', '--pseudopotential', type=str, nargs='?', default='paw',
+                          help='pseudopotential type manual, paw, nc, default: "paw"')
+        self.args = self.parse_args()
     
 options = options()
 args = options.args
-print(args)
+#print(args)
 #var = TdpwVarible()
+if args.pseudopotential == 'manual':
+    lines = open('input.in').readlines()
+    for il, line in enumerate(lines):
+        if 'ATOMIC_SPECIES' in line:
+            start = il
+        if 'ATOMIC_POSITIONS' in line:
+            end = il
+    args.pseudopotential = ''.join(lines[start+1:end])
+    #print(args.pseudopotential)
+            
+            
 #atoms = var.getTrajactory()[-1]
 #print(readQE(args.input).__n)
 atoms = list(readQE(args.input))[-1]
@@ -40,7 +53,7 @@ if args.view:
     view(atoms)
 if args.print:
     print(atoms)
-writeQE(args.output,atoms,cart=False)
+writeQE(args.output,atoms,cart=args.cartesian,pp=args.pseudopotential)
 write('struct.xsf',atoms)
 #print(atoms)
 
