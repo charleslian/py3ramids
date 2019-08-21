@@ -90,7 +90,7 @@ class TdpwVarible(Variables):
     
     lines = self._findAllLineContain('Ekin + Etot', self.outputFile)
     if len(lines) != 0:
-      if lines[0].split()[-2] != 'NaN':
+      if lines[0].split()[-2] != 'NaN' and '*' not in lines[0].split()[-2]:
         totalEnergy = np.array([float(line.split()[-2])*Rydberg for line in lines])
       else:
         totalEnergy = ksEnergy
@@ -279,7 +279,7 @@ class TdpwVarible(Variables):
         
     filename = 'Trajectory'
     from ase.io import write  
-    write(filename,images,'traj')
+    write(filename,images[1:],'traj')
     
     from ase.io.trajectory import Trajectory
     
@@ -289,12 +289,13 @@ class TdpwVarible(Variables):
   
   def getCurrent(self):
     keyword = 'current_KS is' 
-    lines = self._findAllLineContain(keyword, self.outputFile) + ['current is 0.0 0.0 0.0']
-    current = np.array([[float(num) for num in line.split()[2:6]] for line in lines])
+    lines = self._findAllLineContain(keyword, self.outputFile) #+ ['current is 0.0 0.0 0.0']
+    current = np.array([[float(num) for num in line.split()[2:]] for line in lines])
+    #print(current)
     if current.shape[0] == 1:
         keyword = 'current is'
-        lines = self._findAllLineContain(keyword, self.outputFile) + ['current is 0.0 0.0 0.0']
-        current = np.array([[float(num) for num in line.split()[2:6]] for line in lines])
+        lines = self._findAllLineContain(keyword, self.outputFile) #+ ['current is 0.0 0.0 0.0']
+        current = np.array([[float(num) for num in line.split()[2:]] for line in lines])
     #print(current)
     current[-1,:] = current[-2,:]
     return current - current[0,:] 

@@ -12,7 +12,7 @@ def plot(ax, var):
   directions = ['x','y','z'] 
   linestyle = '-','--','-.'
   dim = min(var.time.shape[0], var.current.shape[0])
-  for idir in range(3):
+  for idir in range(var.current.shape[1]):
     ax.plot(var.time[:dim], var.current[:dim,idir], ls=linestyle[idir], label=directions[idir])
   import py3ramids.plot.setting as ma 
   ma.setProperty(ax, ylabel='Current (a.u.)', xlabel='Time (fs)')

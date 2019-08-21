@@ -160,6 +160,8 @@ def setProperty(ax, **kargs):
   ax.tick_params(labelsize=ticksize)
   if 'minortick' in kargs and kargs['minortick']:
       ax.minorticks_on()
+  else:
+      ax.minorticks_off()
   #print ax.get_xlim(),ax.get_ylim()
   if 'ncol' in kargs:
     ncol = kargs['ncol'] 
@@ -220,7 +222,7 @@ def getPropertyFromPosition(index=None, xlabel='',ylabel='',title='',
   if ylimits is not  None:
     args['ylimits'] = ylimits
   if ticksize is not None:
-    args['ticksize'] = ticksize    
+    args['ticksize'] = ticksize
   
   return args
 

@@ -16,7 +16,7 @@ def plot(ax, var):
             ls=linestyle[idir], label=directions[idir])
   #ax.plot(var.time, var.energy[1], '--', label='KS')
   import py3ramids.plot.setting as ma
-  ma.setProperty(ax, ylabel=r'A Field (Bohr$^{-1}$)', xlabel='Time (fs)')
+  ma.setProperty(ax, ylabel=r'A Field (Bohr$^{-1}$)', xlabel='Time (fs)', minortick=True)
 
 
 if __name__ == '__main__':

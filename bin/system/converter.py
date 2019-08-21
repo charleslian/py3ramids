@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 14 21:52:52 2017
@@ -61,16 +61,16 @@ if __name__ == '__main__':
   options = options()
   args = options.args
   if args.energy is not None:
-    print "input energy %5.4f eV"%args.energy
+    print("input energy %5.4f eV"%args.energy)
     fromEnergy(args.energy)
   if args.period is not None:
-    print "input period %5.4f fs"%args.period
+    print("input period %5.4f fs"%args.period)
     fromPeriod(args.period)
   if args.wavelength is not None:
-    print "input wavelength %5.4f nm"%args.wavelength
+    print("input wavelength %5.4f nm"%args.wavelength)
     fromWavelength(args.wavelength)
   if args.frequency is not None:
-    print "input frequency %5.4f /fs"%args.frequency
+    print("input frequency %5.4f /fs"%args.frequency)
     fromFrequency(args.frequency)
       
       
