@@ -13,6 +13,7 @@ def plot(ax, var):
   steps = min(var.time.shape[0],var.energy[0].shape[0], var.energy[1].shape[0])
   ax.plot(var.time[:steps], var.energy[0][:steps], '-',label='Total')
   ax.plot(var.time[:steps], var.energy[1][:steps], '--', label='KS')
+  print('energy:',var.energy[1][-1] - var.energy[1][0])
   import py3ramids.plot.setting as ma
   ma.setProperty(ax, ylabel='Energy (eV)', xlabel='Time (fs)')
 

@@ -39,6 +39,7 @@ if __name__ == '__main__':
   
   import py3ramids.bin.basic.current
   py3ramids.bin.basic.current.plot(axs[0],var)
+  print("carrier", var.carrier[0][-1])
   
   import py3ramids.bin.basic.energy
   py3ramids.bin.basic.energy.plot(axs[1],var)

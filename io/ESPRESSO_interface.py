@@ -18,51 +18,54 @@ from py3ramids.io.variables import Variables
 from ase.units import Rydberg, Bohr
 
 class TdpwVarible(Variables):
-  def __init__(self,inputFile='input.in', outputFile = 'result', tmpFile = 'var.pkl'):
+  def __init__(self,inputFile='input.in', outputFile = 'result', tmpFile = 'var.pkl', trivial=False):
 #    import os
 #    if os.path.exists(tmpFile):  
 #        import pickle
 #        with open(tmpFile,'rb') as f: return pickle.load(f)
-        
     self.inputFile  = inputFile
     self.outputFile = outputFile
-    self.eigStartStep = 2
-    #self.options    = self.readFdf(self.inputFile)
     self.label      = 'pwscf'
-    self.mdTimeStep = self._readValue('dt',float)*0.048378, 'fs'
-    self.tdTimeStep = self._readValue('edt',float)*0.048378, 'fs'
-    self.mdFinalStep = self._readValue('nstep',int)
-    self.tdFinalStep = self._readValue('nstep',int)
     self.spinPol = False #self.__getLogical('spinpolarized',False)
     self.eigLengthStep = 1
-    #self.laserParam = self.__getArray('tdlightenvelope',np.zeros(5))
-    
-    # Basic 
+    self.eigStartStep = 2
     self.numAtom = self.getNumAtom()
     self.numElect = self.getNumElect()
     self.numKpt = self.getNumKpt()
     self.numBnd = self.getNumBnd()
-    
-    # Arrays 
-    self.eField = self.getEfield()
-    self.aField = self.getAfield()
     self.energy = self.getEnergy()
-    
     self.curStep = self.energy[0].shape[0] # Derivatives
-    self.time = np.arange(self.curStep)*self.tdTimeStep[0] # Derivatives
-    
-    self.temperature = self.getTemperature()
     self.kpts = self.getKpts()
-    #self.traj = self.getTrajactory()
-    self.getTrajactory() # just generate the file, don't save it in the obj
-    self.current = self.getCurrent()
-    self.carrier = self.getCarrier()
-    self.tdnorm = self.readTDData(mode='norm')
-    self.tdvalue = self.readTDData(mode='value')
-    #self.carrier = self.getCarrier()
-    self.cartime = self.time
-#  def __new__(cls,filename='var.pkl'):
+    self.getTrajactory()
+    if trivial:
+        self.mdTimeStep = 1
+        self.tdTimeStep = 1
+        #self.options    = self.readFdf(self.inputFile)
 
+        #self.laserParam = self.__getArray('tdlightenvelope',np.zeros(5))
+        
+        # Basic 
+        #self.traj = self.getTrajactory()
+         # just generate the file, don't save it in the obj
+    else:
+        self.mdTimeStep = self._readValue('dt',float)*0.048378, 'fs'
+        self.tdTimeStep = self._readValue('edt',float)*0.048378, 'fs'
+        self.mdFinalStep = self._readValue('nstep',int)
+        self.tdFinalStep = self._readValue('nstep',int)
+        # Arrays 
+        self.eField = self.getEfield()
+        self.aField = self.getAfield()
+        
+        self.time = np.arange(self.curStep)*self.tdTimeStep[0] # Derivatives
+        self.temperature = self.getTemperature()
+        
+        self.current = self.getCurrent()
+        self.carrier = self.getCarrier()
+        self.tdnorm = self.readTDData(mode='norm')
+        self.tdvalue = self.readTDData(mode='value')
+        #self.carrier = self.getCarrier()
+        self.cartime = self.time
+#  def __new__(cls,filename='var.pkl'):
       
       
   def _readValue(self, tag, typeFunc):
@@ -274,12 +277,16 @@ class TdpwVarible(Variables):
                           for l in selectLines])
         #forces *= units.Ry / units.Bohr
         calc = atom.get_calculator() 
+        #print(selectPrperties)
         calc.results['stress'] = selectPrperties
         #atom.set_calculator(calc)
         
     filename = 'Trajectory'
-    from ase.io import write  
-    write(filename,images[1:],'traj')
+    from ase.io import write 
+    if len(images) > 1:
+        write(filename,images[1:],'traj')
+    else:
+        write(filename,images,'traj')
     
     from ase.io.trajectory import Trajectory
     
@@ -292,7 +299,7 @@ class TdpwVarible(Variables):
     lines = self._findAllLineContain(keyword, self.outputFile) #+ ['current is 0.0 0.0 0.0']
     current = np.array([[float(num) for num in line.split()[2:]] for line in lines])
     #print(current)
-    if current.shape[0] == 1:
+    if current.shape[0] == 0:
         keyword = 'current is'
         lines = self._findAllLineContain(keyword, self.outputFile) #+ ['current is 0.0 0.0 0.0']
         current = np.array([[float(num) for num in line.split()[2:]] for line in lines])
@@ -348,8 +355,8 @@ class TdpwVarible(Variables):
     kweight = data[2:2+nkstot]
     data = data[2+nkstot:]
     dim = np.prod(data.shape)
-    print(data.shape)
-    print(dim,nkstot,nbnd)
+    #print(data.shape)
+    #print(dim,nkstot,nbnd)
     
     #data = data[:nstep*nkstot].reshape([nstep, nkstot, nbnd])
     
@@ -361,7 +368,6 @@ class TdpwVarible(Variables):
         
       
     return data
-
 #-------------------------------------------------------------------
 if __name__== '__main__':
   options = TdpwVarible()

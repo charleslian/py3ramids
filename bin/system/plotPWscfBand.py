@@ -37,7 +37,6 @@ print(args)
 #    #print band
 #    return band
 
-
 data = np.loadtxt('bands.out.gnu')#readData()
 #efermi = 0
 #data[:,1:] -= efermi
