@@ -78,7 +78,8 @@ refereeComments = open('comments').readlines()
 letterToReferee = r'''
 \textbf{Reply to reviewers’ suggestions (repeated after reviewer’s comments)}\\'''
 iRef = 0
-alphabet = 'abcdefghijklmnopqrstuvwxyz'
+text = ''
+alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 for line in refereeComments:
     if line[0:3] == '---':
         iRef += 1
@@ -87,18 +88,21 @@ for line in refereeComments:
 {\color{gray}\rule[0mm]{\textwidth}{0.8pt}}
 \textbf{Reviewer %i}\\
 {\color{gray}\rule[3mm]{\textwidth}{0.8pt}}'''%iRef
-    elif line == '\n': continue
-    else: 
+    elif line == '\n':
         item += 1
         itemName = 'Ref%sCom%s'%(alphabet[iRef], alphabet[item])
         letterToReferee += r'''
-\textbf{Comments:} \textit{%s}
+{{\color{blue}{\textbf{Comments:} %s}}}
 
 \textbf{Response:} We thank the reviewer for this question. We fully agree with the reviewer, and we add more explanation on Page \ref{txt:%s} of the revised manuscript as follows: 
 
 \newcommand{\%s}{\textbf{example text}} {\label{txt:%s} \%s}
 ``\%s''
-'''%(line[:-1], *[itemName]*5)
+'''%(text, *[itemName]*5)
+        text = ''
+    else: 
+        text += line[:-1].replace('%','\%').replace('_','\_').replace('^','\^')
+
 letterToReferee += r'\end{document}'
 
 open('response.tex','w').write(article+letterToEditor+letterToReferee)
