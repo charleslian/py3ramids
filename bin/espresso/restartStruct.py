@@ -18,8 +18,8 @@ class options(argparse.ArgumentParser):
                           help='view the structure')
         self.add_argument('-p', '--print', type=bool, nargs='?', default=False,
                           help='print the structure')
-        self.add_argument('-cart', '--cartesian', type=bool, nargs='?', default=True,
-                          help='output as cartesian')
+        self.add_argument('-t', '--type', type=str, nargs='?', default='c',
+                          help='output as cartesian (c) or direct (d)')
         self.add_argument('-i', '--input', type=str, nargs='?', default='result',
                           help='input file, default: "result"')  
         self.add_argument('-o', '--output', type=str, nargs='?', default='struct.part',
@@ -30,7 +30,6 @@ class options(argparse.ArgumentParser):
     
 options = options()
 args = options.args
-#print(args)
 #var = TdpwVarible()
 if args.pseudopotential == 'manual':
     lines = open('input.in').readlines()
@@ -53,7 +52,11 @@ if args.view:
     view(atoms)
 if args.print:
     print(atoms)
-writeQE(args.output,atoms,cart=args.cartesian,pp=args.pseudopotential)
+if args.type == 'c': 
+   cart = True
+else:
+   cart = False
+writeQE(args.output,atoms,cart=cart,pp=args.pseudopotential)
 write('struct.xsf',atoms)
 #print(atoms)
 
