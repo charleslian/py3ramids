@@ -19,13 +19,19 @@ def action():
     soft = 'tdap'
   elif os.path.exists('input.in'):
     soft = 'tdpw'
+    input = 'input.in'
+    output = 'result'
+  elif os.path.exists('tdap.in'):
+    soft = 'tdpw'
+    input = 'tdap.in'
+    output = 'tdap.out'
     
   if soft == 'tdap':
     from py3ramids.io.SIESTA_interface import TdapVarible
     var = TdapVarible()
   else:
     from py3ramids.io.ESPRESSO_interface import TdpwVarible
-    var = TdpwVarible()
+    var = TdpwVarible(inputFile=input, outputFile=output)
   
   with open('var.pkl', 'wb') as f: 
       pickle.dump(var, f)

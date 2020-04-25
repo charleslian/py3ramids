@@ -186,14 +186,14 @@ class TdpwVarible(Variables):
       
     return kpts
 
-  def getTrajactory(self, fileobj='result'):
+  def getTrajactory(self):
     from ase.atoms import Atoms, Atom
     from ase import units
     from ase.calculators.singlepoint import SinglePointCalculator
     
     """Reads quantum espresso output text files."""
     
-    fileobj = open(fileobj, 'rU')
+    fileobj = open(self.outputFile, 'rU')
     lines = fileobj.readlines()
     #print lines
     images = []
@@ -293,14 +293,13 @@ class TdpwVarible(Variables):
     traj = Trajectory(filename)
     return traj
     
-  
   def getCurrent(self):
-    keyword = 'current_KS is' 
+    keyword = 'current_jks' 
     lines = self._findAllLineContain(keyword, self.outputFile) #+ ['current is 0.0 0.0 0.0']
-    current = np.array([[float(num) for num in line.split()[2:]] for line in lines])
+    current = np.array([[float(num) for num in line.split()[-3:]] for line in lines])
     #print(current)
     if current.shape[0] == 0:
-        keyword = 'current is'
+        keyword = 'current_jtdks is'
         lines = self._findAllLineContain(keyword, self.outputFile) #+ ['current is 0.0 0.0 0.0']
         current = np.array([[float(num) for num in line.split()[2:]] for line in lines])
     #print(current)
@@ -347,20 +346,24 @@ class TdpwVarible(Variables):
     #del text[::(nkstot+1)]
     #print([len(line.split()) for line in text[2:]])
     
-    data = np.hstack([[float(num) for num in line.split()] for line in open(filename) if line[0] !='-'])
+    #data = np.hstack([[float(num) for num in line.split()] for line in open(filename) if line[0] !='-'])
     
     #data = np.hstack([([float(i) for i in line.split()]) for line in text[1:]])
-    
-    nbnd, nkstot = int(data[0]), int(data[1])
-    kweight = data[2:2+nkstot]
-    data = data[2+nkstot:]
-    dim = np.prod(data.shape)
+    f = open(filename)
+    line = f.readline().split()
+    nbnd, nspin, nkstot = int(line[0]), int(line[1]), int(line[2])
+    print(nbnd, nkstot)
+    line = f.readline()
+    from io import StringIO
+    kweight = np.loadtxt(StringIO(line))
+    print(kweight.shape)
+    data = np.loadtxt(filename, comments='--', skiprows=2) 
+    #print(data.shape)
+    #dim = np.prod(data.shape)
     #print(data.shape)
     #print(dim,nkstot,nbnd)
-    
     #data = data[:nstep*nkstot].reshape([nstep, nkstot, nbnd])
-    
-    data = data.reshape([dim//nkstot//nbnd, nkstot, nbnd])
+    data = data.reshape([-1, nkstot, nbnd])
     
     if weighted: 
       for ib in range(data.shape[2]):
